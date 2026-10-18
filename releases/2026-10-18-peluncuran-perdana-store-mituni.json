@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-18",
+  "type": "feature",
+  "project": {
+    "name": "Store Mituni"
+  },
+  "title": {
+    "id": "Peluncuran Perdana Platform Store Mituni",
+    "en": "Official Launch of Store Mituni Platform"
+  },
+  "body": {
+    "id": "Perilisan platform terpadu untuk showcase dan pemasaran seluruh portofolio solusi produk digital Mituni dengan navigasi intuitif dan informasi lengkap.",
+    "en": "Official release of the unified platform showcasing and marketing all Mituni digital product solutions with intuitive navigation and comprehensive information."
+  },
+  "items": [
+    {
+      "type": "new",
+      "id": "Peluncuran etalase digital terpadu untuk solusi manajemen operasional bisnis, analitik e-commerce, dan otomasi siaran langsung.",
+      "en": "Launch of a unified digital storefront for business operations management, e-commerce analytics, and live broadcast automation."
+    },
+    {
+      "type": "new",
+      "id": "Penyediaan panduan kebutuhan dan spesifikasi solusi digital untuk mempermudah calon pengguna memilih paket yang tepat.",
+      "en": "Provision of requirements guides and digital solution specifications to help prospective users choose the right package."
+    },
+    {
+      "type": "new",
+      "id": "Integrasi saluran konsultasi langsung untuk mempermudah pemesanan dan dukungan kebutuhan bisnis pengguna.",
+      "en": "Direct consultation channels integrated to simplify ordering and ongoing business support for users."
+    }
+  ]
+}
