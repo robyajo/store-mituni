@@ -130,3 +130,29 @@
     @apply font-sans;
     }
 }
+
+@utility bg-grid-dots {
+  background-image: radial-gradient(rgba(120, 140, 180, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+@utility bg-grid-dense {
+  background-image: linear-gradient(to right, rgba(120, 140, 180, 0.07) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(120, 140, 180, 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@utility glass-card {
+  background: color-mix(in oklch, var(--card) 85%, transparent);
+  backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in oklch, var(--foreground) 8%, transparent);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+@utility glow-cyan {
+  box-shadow: 0 0 40px -10px rgba(6, 182, 212, 0.35);
+}
+
+@utility glow-violet {
+  box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.35);
+}

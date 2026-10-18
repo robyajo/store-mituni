@@ -5,14 +5,29 @@
     "name": "Store Mituni"
   },
   "title": {
-    "id": "Peluncuran Perdana Platform Store Mituni",
-    "en": "Official Launch of Store Mituni Platform"
+    "id": "Penyempurnaan Antarmuka, Visibilitas Pencarian, & Pratinjau Sosial Store Mituni",
+    "en": "Enhancement of Interface, Search Visibility, & Social Previews on Store Mituni"
   },
   "body": {
-    "id": "Perilisan platform terpadu untuk showcase dan pemasaran seluruh portofolio solusi produk digital Mituni dengan navigasi intuitif dan informasi lengkap.",
-    "en": "Official release of the unified platform showcasing and marketing all Mituni digital product solutions with intuitive navigation and comprehensive information."
+    "id": "Pembaruan menyeluruh mencakup desain antarmuka modern, kalkulator efisiensi bisnis, serta penguatan visibilitas pencarian dan pratinjau media sosial terpadu.",
+    "en": "Comprehensive update covering modern interface design, business efficiency calculators, and strengthened search visibility with integrated social previews."
   },
   "items": [
+    {
+      "type": "improvement",
+      "id": "Penerapan identitas visual resmi Mituni pada bilah navigasi atas dan footer situs untuk memperkuat pengenalan merek.",
+      "en": "Application of the official Mituni visual brand identity across the top navigation bar and site footer to reinforce brand recognition."
+    },
+    {
+      "type": "improvement",
+      "id": "Optimalisasi visibilitas mesin pencari dan penyediaan pratinjau kartu media sosial beresolusi tinggi beserta dukungan ikon multi-perangkat.",
+      "en": "Search engine visibility optimization and high-resolution social media preview cards alongside multi-device icon support."
+    },
+    {
+      "type": "improvement",
+      "id": "Penyempurnaan desain visual berstandar tinggi dengan tampilan cockpit simulasi interaktif, tata letak bento modern, dan pencahayaan latar yang lebih halus.",
+      "en": "Refinement of high-standard visual design featuring an interactive simulation cockpit, modern bento layout, and smoother ambient lighting."
+    },
     {
       "type": "new",
       "id": "Peluncuran etalase digital terpadu untuk solusi manajemen operasional bisnis, analitik e-commerce, dan otomasi siaran langsung.",
@@ -20,13 +35,13 @@
     },
     {
       "type": "new",
-      "id": "Penyediaan panduan kebutuhan dan spesifikasi solusi digital untuk mempermudah calon pengguna memilih paket yang tepat.",
-      "en": "Provision of requirements guides and digital solution specifications to help prospective users choose the right package."
+      "id": "Penyediaan kalkulator interaktif untuk simulasi penghematan jam kerja dan estimasi peningkatan omzet bisnis.",
+      "en": "Provision of an interactive calculator to simulate operational hours saved and estimated business revenue growth."
     },
     {
       "type": "new",
-      "id": "Integrasi saluran konsultasi langsung untuk mempermudah pemesanan dan dukungan kebutuhan bisnis pengguna.",
-      "en": "Direct consultation channels integrated to simplify ordering and ongoing business support for users."
+      "id": "Penyajian katalog produk lengkap dengan rincian fitur, tabel komparasi paket langganan, dan kanal konsultasi langsung.",
+      "en": "Presentation of a complete product catalog with feature details, subscription comparison tables, and direct consultation channels."
     }
   ]
 }
