@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-24",
+  "type": "feature",
+  "project": {
+    "name": "Store Mituni"
+  },
+  "title": {
+    "id": "Integrasi Katalog Produk Interaktif & Kontak Layanan Terpadu",
+    "en": "Interactive Product Catalog Integration & Unified Customer Support"
+  },
+  "body": {
+    "id": "Katalog produk kini terhubung langsung secara dinamis dengan informasi rilis produk terbaru, modul spesifikasi detail, serta kanal pemesanan dan bantuan pelanggan langsung.",
+    "en": "The product catalog is now dynamically linked with the latest release information, detailed feature specifications, and direct ordering and customer assistance channels."
+  },
+  "items": [
+    {
+      "type": "new",
+      "id": "Penyajian etalase produk dinamis dengan label status ketersediaan, estimasi harga transparan, serta rincian paket lisensi.",
+      "en": "Dynamic product showcase featuring availability status badges, transparent pricing estimates, and detailed license packages."
+    },
+    {
+      "type": "new",
+      "id": "Penyaringan kategori katalog yang memudahkan pencarian solusi digital siap pakai, lisensi seumur hidup, maupun produk yang segera hadir.",
+      "en": "Catalog category filtering enabling effortless discovery of ready-to-use digital solutions, lifetime licenses, and upcoming products."
+    },
+    {
+      "type": "improvement",
+      "id": "Jendela detail dan spesifikasi fitur yang lebih informatif untuk membantu pengguna memahami keunggulan tiap perangkat lunak sebelum memesan.",
+      "en": "Enhanced feature specification modal helping users thoroughly understand the advantages of each software solution before ordering."
+    },
+    {
+      "type": "improvement",
+      "id": "Penyambungan langsung tombol pemesanan dan konsultasi dengan nomor layanan bantuan pelanggan resmi.",
+      "en": "Direct connectivity from order and consultation buttons to official customer assistance channels."
+    }
+  ]
+}

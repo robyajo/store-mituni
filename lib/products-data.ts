@@ -16,23 +16,26 @@ export interface ProductItem {
   name: string;
   tagline: string;
   description: string;
-  category: "saas" | "live-stream" | "marketing" | "gateway" | "ai";
+  category: "saas" | "live-stream" | "marketing" | "gateway" | "ai" | string;
   categoryLabel: string;
   badge: string;
   iconName: string;
-  gradient: string;
-  accentColor: string;
+  iconUrl?: string | null;
+  status?: "active" | "coming_soon" | "maintenance" | string;
+  gradient?: string;
+  accentColor?: string;
   highlights: string[];
   features: {
     title: string;
     description: string;
   }[];
   plans: ProductPlan[];
-  stats: {
+  stats?: {
     label: string;
     value: string;
   }[];
   demoSnippet?: string;
+  isApi?: boolean;
 }
 
 export const PRODUCTS: ProductItem[] = [

@@ -52,6 +52,121 @@ export default function IndexPage() {
   const [selectedCategory, setSelectedCategory] = React.useState<string>("all");
   const [activeModalProduct, setActiveModalProduct] = React.useState<ProductItem | null>(null);
 
+  // API Data state (proxied to Laravel backend)
+  const [apiApplications, setApiApplications] = React.useState<ProductItem[]>([]);
+  const [isLoadingApi, setIsLoadingApi] = React.useState<boolean>(true);
+  const [csWhatsapp, setCsWhatsapp] = React.useState<string>("6282386825834");
+
+  // Fetch applications and customer support via Next.js proxy
+  React.useEffect(() => {
+    let isMounted = true;
+
+    async function fetchData() {
+      setIsLoadingApi(true);
+      try {
+        const appRes = await fetch("/api/v1/applications?per_page=50");
+        if (appRes.ok) {
+          const appJson = await appRes.json();
+          if (appJson.success && Array.isArray(appJson.data) && appJson.data.length > 0) {
+            const mapped: ProductItem[] = appJson.data.map((app: any): ProductItem => {
+              const iconUrl = app.icon
+                ? (app.icon.startsWith("http") ? app.icon : `/storage/${app.icon.replace(/^\/+/, "")}`)
+                : null;
+
+              const features = Array.isArray(app.features) && app.features.length > 0
+                ? app.features.map((f: any) => ({
+                  title: f.name || f.title || "Fitur Unggulan",
+                  description: f.description || "",
+                }))
+                : [
+                  { title: "Fitur Manajemen Lengkap", description: "Otomasi sistem untuk efisiensi bisnis dan kemudahan operasional." },
+                  { title: "Dukungan Teknis & Update", description: "Pembaruan berkala serta panduan teknis langsung dari tim Store Mituni." },
+                ];
+
+              const highlights = Array.isArray(app.features) && app.features.length > 0
+                ? app.features.map((f: any) => f.name || f.title)
+                : ["Lisensi Resmi Mituni", "Pembaruan Berkala", "Dukungan CS Langsung"];
+
+              const plans = Array.isArray(app.products) && app.products.length > 0
+                ? app.products.map((p: any) => ({
+                  id: String(p.id),
+                  name: p.name,
+                  billingCycle: (p.license_type === "subscription" ? "monthly" : "lifetime") as any,
+                  price: Number(p.price) || 0,
+                  features: [
+                    p.stock > 0 ? `Tersedia ${p.stock} lisensi` : "Stok siap aktivasi",
+                    p.ecommerce ? `Platform: ${p.ecommerce}` : "Pembelian Langsung",
+                    "Aktivasi lisensi instan",
+                    "Dukungan teknis Mituni",
+                  ],
+                  ctaText: "Pesan Lisensi",
+                }))
+                : [];
+
+              let badge = "Siap Pakai";
+              if (app.status === "coming_soon") {
+                badge = "Coming Soon";
+              } else if (app.status === "maintenance") {
+                badge = "Maintenance";
+              } else if (app.license_type === "lifetime") {
+                badge = "Lisensi Lifetime";
+              }
+
+              return {
+                id: `app-${app.id}`,
+                slug: (app.code || `app-${app.id}`).toLowerCase(),
+                name: app.name,
+                tagline: app.description || "Solusi perangkat lunak terintegrasi untuk bisnis digital.",
+                description: app.description || "Solusi perangkat lunak terintegrasi untuk efisiensi bisnis dan operasional harian.",
+                category: app.status === "coming_soon" ? "coming_soon" : (app.license_type === "lifetime" ? "lifetime" : "active"),
+                categoryLabel: app.status === "coming_soon" ? "Segera Hadir" : (app.license_type === "lifetime" ? "Lisensi Lifetime" : "Aplikasi Mituni"),
+                badge,
+                iconName: "Cpu",
+                iconUrl,
+                status: app.status || "active",
+                highlights,
+                features,
+                plans,
+                isApi: true,
+              };
+            });
+
+            if (isMounted) {
+              setApiApplications(mapped);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Gagal memuat katalog aplikasi via proxy:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoadingApi(false);
+        }
+      }
+
+      try {
+        const csRes = await fetch("/api/v1/customer-supports");
+        if (csRes.ok) {
+          const csJson = await csRes.json();
+          if (csJson.success && Array.isArray(csJson.data) && csJson.data.length > 0) {
+            const firstCs = csJson.data[0];
+            if (firstCs.whatsapp && isMounted) {
+              setCsWhatsapp(String(firstCs.whatsapp).replace(/[^0-9]/g, ""));
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Gagal memuat customer support via proxy:", err);
+      }
+    }
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // ROI Calculator inputs
   const [roiTransactions, setRoiTransactions] = React.useState<number>(150);
   const [roiBranches, setRoiBranches] = React.useState<number>(3);
@@ -79,10 +194,68 @@ export default function IndexPage() {
     };
   }, [roiTransactions, roiBranches]);
 
-  const filteredProducts = React.useMemo(() => {
-    if (selectedCategory === "all") return PRODUCTS;
-    return PRODUCTS.filter((p) => p.category === selectedCategory);
-  }, [selectedCategory]);
+  // Dynamic categories for Bento Grid
+  const catalogCategories = React.useMemo(() => {
+    if (apiApplications.length === 0) {
+      return [
+        { id: "all", label: `Semua Solusi (${PRODUCTS.length})` },
+        { id: "saas", label: "Kasir Laundry" },
+        { id: "live-stream", label: "TikTok Live Stream" },
+        { id: "marketing", label: "Marketing Analytics" },
+        { id: "gateway", label: "WhatsApp Gateway" },
+        { id: "ai", label: "AI & Tools" },
+      ];
+    }
+
+    const categories: { id: string; label: string }[] = [
+      { id: "all", label: `Semua Aplikasi (${apiApplications.length})` },
+    ];
+
+    const activeCount = apiApplications.filter((p) => p.status === "active" || (!p.status && p.status !== "coming_soon" && p.status !== "maintenance")).length;
+    if (activeCount > 0) {
+      categories.push({ id: "active", label: `Siap Pakai (${activeCount})` });
+    }
+
+    const comingSoonCount = apiApplications.filter((p) => p.status === "coming_soon").length;
+    if (comingSoonCount > 0) {
+      categories.push({ id: "coming_soon", label: `Coming Soon (${comingSoonCount})` });
+    }
+
+    const lifetimeCount = apiApplications.filter((p) => p.plans.some((pl) => pl.billingCycle === "lifetime") || p.category === "lifetime" || p.badge.includes("Lifetime")).length;
+    if (lifetimeCount > 0) {
+      categories.push({ id: "lifetime", label: `Lisensi Lifetime (${lifetimeCount})` });
+    }
+
+    const maintenanceCount = apiApplications.filter((p) => p.status === "maintenance").length;
+    if (maintenanceCount > 0) {
+      categories.push({ id: "maintenance", label: `Maintenance (${maintenanceCount})` });
+    }
+
+    return categories;
+  }, [apiApplications]);
+
+  const filteredCatalogProducts = React.useMemo(() => {
+    const list = apiApplications.length > 0 ? apiApplications : PRODUCTS;
+    if (selectedCategory === "all") return list;
+
+    if (apiApplications.length > 0) {
+      if (selectedCategory === "coming_soon") {
+        return list.filter((p) => p.status === "coming_soon");
+      }
+      if (selectedCategory === "active") {
+        return list.filter((p) => p.status === "active" || (!p.status && p.status !== "coming_soon" && p.status !== "maintenance"));
+      }
+      if (selectedCategory === "maintenance") {
+        return list.filter((p) => p.status === "maintenance");
+      }
+      if (selectedCategory === "lifetime") {
+        return list.filter((p) => p.plans.some((pl) => pl.billingCycle === "lifetime") || p.category === "lifetime" || p.badge.includes("Lifetime"));
+      }
+      return list.filter((p) => p.category === selectedCategory);
+    }
+
+    return list.filter((p) => p.category === selectedCategory);
+  }, [selectedCategory, apiApplications]);
 
   const currentHeroProduct = PRODUCTS[activeTab];
 
@@ -91,9 +264,9 @@ export default function IndexPage() {
       {/* 1. HERO SECTION (Linear & Stripe Inspired Canvas) */}
       <section className="relative pt-16 pb-20 md:pt-24 md:pb-32 overflow-hidden border-b border-border/40 bg-grid-dots">
         {/* Ambient Top Spotlight Beams */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[450px] bg-gradient-to-b from-cyan-500/15 via-teal-500/5 to-transparent blur-[120px] pointer-events-none -z-10" />
-        <div className="absolute -top-32 -right-20 size-[500px] bg-rose-500/10 rounded-full blur-[140px] pointer-events-none -z-10" />
-        <div className="absolute top-48 -left-32 size-[450px] bg-violet-500/10 rounded-full blur-[140px] pointer-events-none -z-10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-250 h-112.5 bg-linear-to-b from-cyan-500/15 via-teal-500/5 to-transparent blur-[120px] pointer-events-none -z-10" />
+        <div className="absolute -top-32 -right-20 size-125 bg-rose-500/10 rounded-full blur-[140px] pointer-events-none -z-10" />
+        <div className="absolute top-48 -left-32 size-112.5 bg-violet-500/10 rounded-full blur-[140px] pointer-events-none -z-10" />
 
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
@@ -108,7 +281,7 @@ export default function IndexPage() {
             {/* Display Headline with Strict Tight Tracking */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-[-0.04em] text-foreground leading-[1.08] mb-6">
               Infrastruktur & Perangkat Lunak{" "}
-              <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
                 Bisnis Digital Indonesia
               </span>
             </h1>
@@ -128,7 +301,7 @@ export default function IndexPage() {
               </a>
 
               <a
-                href="https://wa.me/6281234567890?text=Halo%20Tim%20Store%20Mituni,%20saya%20tertarik%20dengan%20produk%20digital%20Mituni%20dan%20ingin%20berkonsultasi."
+                href={`https://wa.me/${csWhatsapp}?text=Halo%20Tim%20Store%20Mituni,%20saya%20tertarik%20dengan%20produk%20digital%20Mituni%20dan%20ingin%20berkonsultasi.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto"
@@ -235,7 +408,7 @@ export default function IndexPage() {
                   </Button>
 
                   <a
-                    href={`https://wa.me/6281234567890?text=Halo%20Tim%20Store%20Mituni,%20saya%20ingin%20memesan%20lisensi%20${encodeURIComponent(currentHeroProduct.name)}.`}
+                    href={`https://wa.me/${csWhatsapp}?text=Halo%20Tim%20Store%20Mituni,%20saya%20ingin%20memesan%20lisensi%20${encodeURIComponent(currentHeroProduct.name)}.`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -335,7 +508,7 @@ export default function IndexPage() {
                           <div
                             key={i}
                             style={{ height: `${h}%` }}
-                            className="flex-1 rounded-xs bg-gradient-to-t from-rose-500/20 to-rose-500 hover:brightness-125 transition-all"
+                            className="flex-1 rounded-xs bg-linear-to-t from-rose-500/20 to-rose-500 hover:brightness-125 transition-all"
                           />
                         ))}
                       </div>
@@ -362,7 +535,7 @@ export default function IndexPage() {
                         <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-muted/40 border border-border/40 text-xs">
                           <div className="flex items-center gap-2 min-w-0">
                             <span className="font-mono font-bold text-amber-500 text-xs shrink-0">#{i + 1}</span>
-                            <span className="font-medium text-foreground truncate max-w-[200px] sm:max-w-xs">{item.name}</span>
+                            <span className="font-medium text-foreground truncate max-w-50 sm:max-w-xs">{item.name}</span>
                           </div>
                           <div className="flex items-center gap-3 shrink-0 font-mono text-[11px]">
                             <span className="text-emerald-500 font-semibold">{item.velocity}</span>
@@ -496,14 +669,7 @@ export default function IndexPage() {
 
             {/* Category Filter Pills */}
             <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
-              {[
-                { id: "all", label: "Semua Solusi (5)" },
-                { id: "saas", label: "Kasir Laundry" },
-                { id: "live-stream", label: "TikTok Live Stream" },
-                { id: "marketing", label: "Marketing Analytics" },
-                { id: "gateway", label: "WhatsApp Gateway" },
-                { id: "ai", label: "AI & Tools" },
-              ].map((cat) => (
+              {catalogCategories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
@@ -520,92 +686,204 @@ export default function IndexPage() {
             </div>
           </div>
 
-          {/* Cards Grid with Linear/Stripe Bento Polish */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product) => {
-              const lowestPrice = Math.min(...product.plans.map((p) => p.discountPrice || p.price));
-              const formattedPrice = new Intl.NumberFormat("id-ID", {
-                style: "currency",
-                currency: "IDR",
-                maximumFractionDigits: 0,
-              }).format(lowestPrice);
-
-              return (
+          {/* Loading Skeleton */}
+          {isLoadingApi ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
                 <div
-                  key={product.id}
-                  id={product.id}
-                  className="rounded-3xl border border-border/80 bg-card p-6 flex flex-col justify-between hover:border-cyan-500/40 hover:shadow-2xl hover:shadow-black/10 transition-all duration-300 group relative overflow-hidden"
+                  key={i}
+                  className="rounded-3xl border border-border/60 bg-card/60 p-6 flex flex-col justify-between animate-pulse min-h-95"
                 >
-                  {/* Subtle Top Gradient Line */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-4">
-                      <div className="flex size-11 items-center justify-center rounded-2xl bg-muted border border-border/50 group-hover:scale-105 transition-transform">
-                        {PRODUCT_ICONS[product.iconName]}
-                      </div>
-                      <span className="font-mono text-[10px] font-semibold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">
-                        {product.badge}
-                      </span>
+                      <div className="size-11 rounded-2xl bg-muted" />
+                      <div className="w-20 h-5 rounded-full bg-muted" />
                     </div>
-
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground block mb-1">
-                      {product.categoryLabel}
-                    </span>
-                    <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-cyan-500 transition-colors mb-2">
-                      {product.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mb-5">
-                      {product.tagline}
-                    </p>
-
-                    <div className="space-y-2 py-4 border-t border-border/60">
-                      {product.highlights.map((hl, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs text-foreground/90">
-                          <Check className="size-3.5 text-cyan-500 shrink-0" />
-                          <span className="line-clamp-1">{hl}</span>
-                        </div>
-                      ))}
+                    <div className="w-24 h-3 rounded bg-muted/70 mb-2" />
+                    <div className="w-3/4 h-6 rounded bg-muted mb-3" />
+                    <div className="w-full h-8 rounded bg-muted/60 mb-5" />
+                    <div className="space-y-2 py-4 border-t border-border/40">
+                      <div className="w-full h-3 rounded bg-muted/60" />
+                      <div className="w-5/6 h-3 rounded bg-muted/50" />
                     </div>
                   </div>
-
-                  <div className="pt-5 border-t border-border/60 flex flex-col gap-3">
-                    <div className="flex items-baseline justify-between">
-                      <div>
-                        <span className="text-[10px] font-mono text-muted-foreground block">Mulai dari</span>
-                        <span className="font-mono text-xl font-black text-foreground">{formattedPrice}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">/ paket</span>
-                    </div>
-
+                  <div className="pt-5 border-t border-border/40 flex flex-col gap-3">
+                    <div className="w-28 h-6 rounded bg-muted" />
                     <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setActiveModalProduct(product)}
-                        className="text-xs font-medium h-9"
-                      >
-                        Detail & Fitur
-                      </Button>
-
-                      <a
-                        href={`https://wa.me/6281234567890?text=Halo%20Tim%20Store%20Mituni,%20saya%20tertarik%20dengan%20produk%20${encodeURIComponent(product.name)}%20dan%20ingin%20memesan%20lisensi.`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Button
-                          size="sm"
-                          className="w-full text-xs font-semibold h-9 bg-foreground text-background hover:bg-foreground/90 shadow-xs"
-                        >
-                          Pesan Lisensi
-                        </Button>
-                      </a>
+                      <div className="h-9 rounded-xl bg-muted" />
+                      <div className="h-9 rounded-xl bg-muted" />
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          ) : filteredCatalogProducts.length === 0 ? (
+            <div className="text-center py-16 rounded-3xl border border-border/40 bg-card/50">
+              <p className="text-sm text-muted-foreground">Tidak ada produk dalam kategori yang dipilih.</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedCategory("all")}
+                className="mt-4 text-xs"
+              >
+                Tampilkan Semua Solusi
+              </Button>
+            </div>
+          ) : (
+            /* Cards Grid with Linear/Stripe Bento Polish */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCatalogProducts.map((product) => {
+                const validPrices = product.plans
+                  .map((p) => p.discountPrice || p.price)
+                  .filter((p) => p > 0);
+                const lowestPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
+                const formattedPrice = lowestPrice > 0
+                  ? new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    maximumFractionDigits: 0,
+                  }).format(lowestPrice)
+                  : null;
+
+                const isComingSoon = product.status === "coming_soon";
+                const isMaintenance = product.status === "maintenance";
+
+                const waMessage = isComingSoon
+                  ? `Halo Tim Store Mituni, saya tertarik dengan produk ${product.name} yang berstatus Coming Soon dan ingin mendapatkan info awal saat rilis.`
+                  : `Halo Tim Store Mituni, saya tertarik dengan produk ${product.name} dan ingin memesan lisensi.`;
+
+                return (
+                  <div
+                    key={product.id}
+                    id={product.id}
+                    className="rounded-3xl border border-border/80 bg-card p-6 flex flex-col justify-between hover:border-cyan-500/40 hover:shadow-2xl hover:shadow-black/10 transition-all duration-300 group relative overflow-hidden"
+                  >
+                    {/* Subtle Top Gradient Line */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-transparent via-cyan-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-4">
+                        <div className="flex size-11 items-center justify-center rounded-2xl bg-muted border border-border/50 group-hover:scale-105 transition-transform overflow-hidden">
+                          {product.iconUrl ? (
+                            <img
+                              src={product.iconUrl}
+                              alt={product.name}
+                              className="size-7 object-contain"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            PRODUCT_ICONS[product.iconName] || <Layers className="size-5 text-cyan-400" />
+                          )}
+                        </div>
+
+                        {isComingSoon ? (
+                          <span className="font-mono text-[10px] font-semibold text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                            Coming Soon
+                          </span>
+                        ) : isMaintenance ? (
+                          <span className="font-mono text-[10px] font-semibold text-rose-500 dark:text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-500/20">
+                            Maintenance
+                          </span>
+                        ) : (
+                          <span className="font-mono text-[10px] font-semibold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">
+                            {product.badge}
+                          </span>
+                        )}
+                      </div>
+
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground block mb-1">
+                        {product.categoryLabel}
+                      </span>
+                      <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-cyan-500 transition-colors mb-2">
+                        {product.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mb-5">
+                        {product.tagline}
+                      </p>
+
+                      <div className="space-y-2 py-4 border-t border-border/60">
+                        {product.highlights.map((hl, i) => (
+                          <div key={i} className="flex items-center gap-2 text-xs text-foreground/90">
+                            <Check className="size-3.5 text-cyan-500 shrink-0" />
+                            <span className="line-clamp-1">{hl}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-5 border-t border-border/60 flex flex-col gap-3">
+                      {isComingSoon ? (
+                        <div className="flex items-baseline justify-between">
+                          <div>
+                            <span className="text-[10px] font-mono text-amber-500/90 dark:text-amber-400 block font-medium">Status Rilis</span>
+                            <span className="font-mono text-xl font-black text-amber-500 dark:text-amber-400">Segera Hadir</span>
+                          </div>
+                          <span className="text-xs font-mono text-muted-foreground">/ coming soon</span>
+                        </div>
+                      ) : isMaintenance ? (
+                        <div className="flex items-baseline justify-between">
+                          <div>
+                            <span className="text-[10px] font-mono text-rose-500/90 dark:text-rose-400 block font-medium">Status Aplikasi</span>
+                            <span className="font-mono text-xl font-black text-rose-500 dark:text-rose-400">Maintenance</span>
+                          </div>
+                          <span className="text-xs font-mono text-muted-foreground">/ pemeliharaan</span>
+                        </div>
+                      ) : formattedPrice ? (
+                        <div className="flex items-baseline justify-between">
+                          <div>
+                            <span className="text-[10px] font-mono text-muted-foreground block">Mulai dari</span>
+                            <span className="font-mono text-xl font-black text-foreground">{formattedPrice}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {product.plans[0]?.billingCycle === "lifetime" ? "/ lisensi" : "/ paket"}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-baseline justify-between">
+                          <div>
+                            <span className="text-[10px] font-mono text-muted-foreground block">Harga Lisensi</span>
+                            <span className="font-mono text-lg font-bold text-foreground">Hubungi Tim</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">/ konsultasi</span>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setActiveModalProduct(product)}
+                          className="text-xs font-medium h-9"
+                        >
+                          Detail & Fitur
+                        </Button>
+
+                        <a
+                          href={`https://wa.me/${csWhatsapp}?text=${encodeURIComponent(waMessage)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button
+                            size="sm"
+                            className={cn(
+                              "w-full text-xs font-semibold h-9 shadow-xs",
+                              isComingSoon
+                                ? "bg-amber-500 hover:bg-amber-600 text-white"
+                                : "bg-foreground text-background hover:bg-foreground/90"
+                            )}
+                          >
+                            {isComingSoon ? "Nantikan Rilis" : "Pesan Lisensi"}
+                          </Button>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -897,7 +1175,7 @@ export default function IndexPage() {
 
                       <div className="mt-8 pt-5 border-t border-border/60">
                         <a
-                          href={`https://wa.me/6281234567890?text=Halo%20Tim%20Store%20Mituni,%20saya%20ingin%20memesan%20paket%20${encodeURIComponent(plan.name)}%20untuk%20produk%20${encodeURIComponent(currentProduct.name)}.`}
+                          href={`https://wa.me/${csWhatsapp}?text=Halo%20Tim%20Store%20Mituni,%20saya%20ingin%20memesan%20paket%20${encodeURIComponent(plan.name)}%20untuk%20produk%20${encodeURIComponent(currentProduct.name)}.`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-full block"
@@ -906,7 +1184,7 @@ export default function IndexPage() {
                             className={cn(
                               "w-full text-xs font-semibold h-10",
                               plan.isPopular
-                                ? "bg-gradient-to-r from-cyan-600 to-teal-600 text-white hover:from-cyan-500 hover:to-teal-500 shadow-lg shadow-cyan-600/20"
+                                ? "bg-linear-to-r from-cyan-600 to-teal-600 text-white hover:from-cyan-500 hover:to-teal-500 shadow-lg shadow-cyan-600/20"
                                 : ""
                             )}
                             variant={plan.isPopular ? "default" : "outline"}
@@ -1014,7 +1292,7 @@ export default function IndexPage() {
           <div className="mt-8 text-center text-xs text-muted-foreground">
             Ada pertanyaan teknis yang spesifik?{" "}
             <a
-              href="https://wa.me/6281234567890?text=Halo%20Tim%20Store%20Mituni,%20saya%20ingin%20bertanya..."
+              href={`https://wa.me/${csWhatsapp}?text=Halo%20Tim%20Store%20Mituni,%20saya%20ingin%20bertanya...`}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline"
@@ -1028,7 +1306,7 @@ export default function IndexPage() {
       {/* 8. FINAL CONVERSION BANNER (Linear High-Impact) */}
       <section className="py-24 relative overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="relative rounded-3xl border border-border/80 bg-gradient-to-b from-card to-background p-8 sm:p-14 text-center overflow-hidden shadow-2xl">
+          <div className="relative rounded-3xl border border-border/80 bg-linear-to-b from-card to-background p-8 sm:p-14 text-center overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-1/2 translate-x-1/2 -mt-24 size-96 rounded-full bg-cyan-500/10 blur-[100px] pointer-events-none" />
 
             <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
@@ -1044,7 +1322,7 @@ export default function IndexPage() {
 
               <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto">
                 <a
-                  href="https://wa.me/6281234567890?text=Halo%20Tim%20Store%20Mituni,%20saya%20siap%20mengembangkan%20bisnis%20saya%20dengan%20produk%20Mituni."
+                  href={`https://wa.me/${csWhatsapp}?text=Halo%20Tim%20Store%20Mituni,%20saya%20siap%20mengembangkan%20bisnis%20saya%20dengan%20produk%20Mituni.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto"
@@ -1077,12 +1355,33 @@ export default function IndexPage() {
             </button>
 
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-muted border border-border/50">
-                {PRODUCT_ICONS[activeModalProduct.iconName]}
+              <div className="flex size-11 items-center justify-center rounded-2xl bg-muted border border-border/50 overflow-hidden">
+                {activeModalProduct.iconUrl ? (
+                  <img
+                    src={activeModalProduct.iconUrl}
+                    alt={activeModalProduct.name}
+                    className="size-7 object-contain"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  PRODUCT_ICONS[activeModalProduct.iconName] || <Layers className="size-5 text-cyan-400" />
+                )}
               </div>
               <div>
-                <Badge variant="outline" className="text-[10px] font-mono font-semibold mb-1 border-cyan-500/30 text-cyan-600 dark:text-cyan-400 bg-cyan-500/10">
-                  {activeModalProduct.categoryLabel}
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[10px] font-mono font-semibold mb-1",
+                    activeModalProduct.status === "coming_soon"
+                      ? "border-amber-500/30 text-amber-500 bg-amber-500/10"
+                      : activeModalProduct.status === "maintenance"
+                        ? "border-rose-500/30 text-rose-500 bg-rose-500/10"
+                        : "border-cyan-500/30 text-cyan-600 dark:text-cyan-400 bg-cyan-500/10"
+                  )}
+                >
+                  {activeModalProduct.badge || activeModalProduct.categoryLabel}
                 </Badge>
                 <h3 className="text-xl font-bold text-foreground">{activeModalProduct.name}</h3>
               </div>
@@ -1106,32 +1405,70 @@ export default function IndexPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-cyan-500/10 border border-cyan-500/20 p-4 mb-6 flex items-center justify-between">
-              <div>
-                <span className="font-mono text-[10px] text-muted-foreground uppercase block">Tersedia {activeModalProduct.plans.length} Pilihan Paket</span>
-                <span className="font-mono text-sm font-bold text-foreground">
-                  Mulai dari {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Math.min(...activeModalProduct.plans.map(p => p.discountPrice || p.price)))}
-                </span>
-              </div>
-              <a
-                href="#harga"
-                onClick={() => {
-                  setPricingProductTab(activeModalProduct.id);
-                  setActiveModalProduct(null);
-                }}
-              >
-                <Button size="sm" variant="outline" className="text-xs h-8">
-                  Pilih Paket
-                </Button>
-              </a>
-            </div>
+            {(() => {
+              const validPrices = (activeModalProduct.plans || [])
+                .map((p) => p.discountPrice || p.price)
+                .filter((p) => p > 0);
+              const modalLowestPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
+              const formattedModalPrice = modalLowestPrice > 0
+                ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(modalLowestPrice)
+                : null;
+
+              return (
+                <div className="rounded-2xl bg-cyan-500/10 border border-cyan-500/20 p-4 mb-6 flex items-center justify-between">
+                  <div>
+                    <span className="font-mono text-[10px] text-muted-foreground uppercase block">
+                      {activeModalProduct.status === "coming_soon"
+                        ? "Status Peluncuran"
+                        : activeModalProduct.plans?.length > 0
+                          ? `Tersedia ${activeModalProduct.plans.length} Pilihan Paket`
+                          : "Status Lisensi"}
+                    </span>
+                    <span className="font-mono text-sm font-bold text-foreground">
+                      {activeModalProduct.status === "coming_soon"
+                        ? "Segera Diluncurkan"
+                        : formattedModalPrice
+                          ? `Mulai dari ${formattedModalPrice}`
+                          : "Hubungi Tim Mituni"}
+                    </span>
+                  </div>
+                  {activeModalProduct.isApi ? (
+                    <a
+                      href={`https://wa.me/${csWhatsapp}?text=${encodeURIComponent(
+                        `Halo Tim Store Mituni, saya ingin konsultasi dan pesan produk ${activeModalProduct.name}.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button size="sm" variant="outline" className="text-xs h-8">
+                        Hubungi Sales
+                      </Button>
+                    </a>
+                  ) : (
+                    <a
+                      href="#harga"
+                      onClick={() => {
+                        setPricingProductTab(activeModalProduct.id);
+                        setActiveModalProduct(null);
+                      }}
+                    >
+                      <Button size="sm" variant="outline" className="text-xs h-8">
+                        Pilih Paket
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              );
+            })()}
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/60">
               <Button variant="ghost" size="sm" onClick={() => setActiveModalProduct(null)}>
                 Tutup
               </Button>
               <a
-                href={`https://wa.me/6281234567890?text=Halo%20Tim%20Store%20Mituni,%20saya%20ingin%20tanya%20lebih%20lanjut%20mengenai%20produk%20${encodeURIComponent(activeModalProduct.name)}.`}
+                href={`https://wa.me/${csWhatsapp}?text=${encodeURIComponent(
+                  `Halo Tim Store Mituni, saya ingin tanya lebih lanjut mengenai produk ${activeModalProduct.name}.`
+                )}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
