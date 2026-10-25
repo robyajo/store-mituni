@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-25",
+  "type": "feature",
+  "project": {
+    "name": "Store Mituni"
+  },
+  "title": {
+    "id": "Halaman Detail Aplikasi, Tautan Lokapasar Resmi & Spesifikasi Lengkap",
+    "en": "Application Detail Showcase, Official Marketplace Links & Comprehensive System Specs"
+  },
+  "body": {
+    "id": "Penyempurnaan halaman detail aplikasi mandiri di Store Mituni dengan integrasi tautan lokapasar resmi (Shopee, Tokopedia, TikTok Shop, dll.), spesifikasi persyaratan hardware, galeri tampilan layar, panduan aktivasi, dan tanya jawab konsumen.",
+    "en": "Comprehensive enhancement of application detail pages on Store Mituni featuring official marketplace store links (Shopee, Tokopedia, TikTok Shop, etc.), system compatibility specs, interactive galleries, activation guides, and buyer FAQs."
+  },
+  "items": [
+    {
+      "type": "new",
+      "id": "Integrasi tautan toko e-commerce resmi (Shopee, Tokopedia, TikTok Shop, Lazada, Website) pada bilah pintasan Hero, kartu edisi paket produk, serta seksi khusus Toko Resmi.",
+      "en": "Integration of official e-commerce store links (Shopee, Tokopedia, TikTok Shop, Lazada, Website) across the Hero shortcut bar, product edition cards, and a dedicated Official Stores section."
+    },
+    {
+      "type": "new",
+      "id": "Penyajian informasi spesifikasi persyaratan sistem dan kompatibilitas perangkat keras (Android 8.0+, mode 100% offline tanpa kuota, tablet kasir, mesin POS all-in-one, dan printer thermal bluetooth).",
+      "en": "Presentation of comprehensive system requirements and hardware compatibility specifications (Android 8.0+, 100% offline operation, cash register tablets, all-in-one POS terminals, and bluetooth thermal printers)."
+    },
+    {
+      "type": "new",
+      "id": "Penyediaan seksi tanya jawab seputar pembelian dan lisensi (FAQ) untuk menjawab pertanyaan seputar pengiriman kode lisensi via chat marketplace, jaminan tanpa biaya bulanan, dan reset perangkat.",
+      "en": "Provision of a buyer FAQ section addressing marketplace license delivery times, zero hidden monthly subscription fees, and official device reset procedures."
+    },
+    {
+      "type": "new",
+      "id": "Penyajian lencana jaminan keaslian lisensi (100% Asli Terdaftar di Server Mituni, Aktivasi Cepat & Mandiri, serta Garansi Reset Resmi).",
+      "en": "Presentation of trust and authenticity guarantee badges highlighting verified server registration, instant self-activation, and authorized device reset coverage."
+    },
+    {
+      "type": "new",
+      "id": "Penyediaan galeri cuplikan layar interaktif dengan penampil gambar beresolusi tinggi dan mode pembesar layar penuh.",
+      "en": "Interactive screenshot showcase gallery featuring high-resolution image previews and full-screen zoom capability."
+    },
+    {
+      "type": "improvement",
+      "id": "Penyajian pilihan edisi paket lisensi lengkap dengan harga transparan per marketplace, ketersediaan stok, dan tombol beli langsung.",
+      "en": "Presentation of license package editions with transparent marketplace-specific pricing, live inventory status, and direct purchase buttons."
+    },
+    {
+      "type": "improvement",
+      "id": "Penambahan panduan aktivasi lisensi tiga langkah praktis untuk mempermudah calon pelanggan memahami proses pemasangan hingga pemakaian aplikasi.",
+      "en": "Addition of a practical three-step license activation guide to help prospective customers effortlessly understand the installation and onboarding process."
+    }
+  ]
+}

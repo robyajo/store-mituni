@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Shirt,
   Radio,
@@ -114,7 +115,7 @@ export default function IndexPage() {
 
               return {
                 id: `app-${app.id}`,
-                slug: (app.code || `app-${app.id}`).toLowerCase(),
+                slug: app.slug || (app.code || `app-${app.id}`).toLowerCase(),
                 name: app.name,
                 tagline: app.description || "Solusi perangkat lunak terintegrasi untuk bisnis digital.",
                 description: app.description || "Solusi perangkat lunak terintegrasi untuk efisiensi bisnis dan operasional harian.",
@@ -398,14 +399,15 @@ export default function IndexPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-border/60">
-                  <Button
-                    size="sm"
-                    onClick={() => setActiveModalProduct(currentHeroProduct)}
-                    className="gap-1.5 bg-foreground text-background hover:bg-foreground/90 font-medium text-xs h-9"
-                  >
-                    <span>Spesifikasi Lengkap</span>
-                    <ArrowRight className="size-3.5" />
-                  </Button>
+                  <Link href={`/${currentHeroProduct.slug}`}>
+                    <Button
+                      size="sm"
+                      className="gap-1.5 bg-foreground text-background hover:bg-foreground/90 font-medium text-xs h-9 cursor-pointer"
+                    >
+                      <span>Spesifikasi Lengkap</span>
+                      <ArrowRight className="size-3.5" />
+                    </Button>
+                  </Link>
 
                   <a
                     href={`https://wa.me/${csWhatsapp}?text=Halo%20Tim%20Store%20Mituni,%20saya%20ingin%20memesan%20lisensi%20${encodeURIComponent(currentHeroProduct.name)}.`}
@@ -796,9 +798,11 @@ export default function IndexPage() {
                       <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground block mb-1">
                         {product.categoryLabel}
                       </span>
-                      <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-cyan-500 transition-colors mb-2">
-                        {product.name}
-                      </h3>
+                      <Link href={`/${product.slug}`} className="hover:text-cyan-500 transition-colors">
+                        <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-cyan-500 transition-colors mb-2">
+                          {product.name}
+                        </h3>
+                      </Link>
                       <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mb-5">
                         {product.tagline}
                       </p>
@@ -851,14 +855,15 @@ export default function IndexPage() {
                       )}
 
                       <div className="grid grid-cols-2 gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setActiveModalProduct(product)}
-                          className="text-xs font-medium h-9"
-                        >
-                          Detail & Fitur
-                        </Button>
+                        <Link href={`/${product.slug}`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-xs font-medium h-9 cursor-pointer"
+                          >
+                            Detail & Fitur
+                          </Button>
+                        </Link>
 
                         <a
                           href={`https://wa.me/${csWhatsapp}?text=${encodeURIComponent(waMessage)}`}
