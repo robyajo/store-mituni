@@ -138,6 +138,11 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <Link href="/kebijakan-privasi" className="hover:text-cyan-500 transition-colors font-medium text-cyan-600 dark:text-cyan-400">
+                  Kebijakan Privasi & Legal
+                </Link>
+              </li>
+              <li>
                 <span className="flex items-center gap-1.5 text-foreground font-mono text-[11px]">
                   <CheckCircle2 className="size-3 text-emerald-400" /> Uptime SLA 99.95%
                 </span>
@@ -169,7 +174,11 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="text-center md:text-right">
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 text-center md:text-right">
+            <Link href="/kebijakan-privasi" className="hover:text-cyan-500 transition-colors">
+              Kebijakan Privasi
+            </Link>
+            <span className="text-border">•</span>
             <span>© {new Date().getFullYear()} PT Mituni Digital Indonesia. Seluruh hak cipta dilindungi.</span>
           </div>
         </div>
